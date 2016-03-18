@@ -1,0 +1,31 @@
+﻿
+@{
+    Layout = null;
+}
+@model DocStore.Models.User
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <title>Вход</title>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-offset-5 col-md-3">
+            <form method="POST" class="form-login">
+                <div>
+                    @Html.ValidationSummary()
+                    <p>Логин: @Html.TextBoxFor(user => user.Name, new {@class = "form-control input-sm", @placeholder = "Логин"})</p>
+                    <p>Пароль: @Html.PasswordFor(user => user.Password, new {@class = "form-control input-sm", @placeholder = "Пароль"})</p>
+                </div>
+                <input type="submit" value="Вход" class="btn btn-primary btn-md"/>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
