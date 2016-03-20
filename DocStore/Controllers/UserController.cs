@@ -29,7 +29,7 @@ namespace DocStore.Controllers
             }
             Log.Debug($"Пользователь {user.Name} пытается войти в приложение.");
             if (!ModelState.IsValid) return View();
-            string errMsg = string.Empty;
+            string errMsg;
             if (UserManager.CheckUser(user, out errMsg))
             {
                 return View("Documents");

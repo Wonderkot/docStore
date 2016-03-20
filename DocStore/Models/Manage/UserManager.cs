@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using DocStore.Models.Nhibernate;
+using NHibernate;
 using NHibernate.Criterion;
 
 namespace DocStore.Models.Manage
@@ -30,10 +31,7 @@ namespace DocStore.Models.Manage
             User userIndDb;
             try
             {
-                var userCrit = session.CreateCriteria<User>();
-                Log.Info($"Выполняется поиск пользователя {user.Name} в базе.");
-                userCrit.Add(Restrictions.Eq("Name", user.Name));
-                userIndDb = userCrit.UniqueResult<User>();
+                userIndDb = SearchUser(user, session);
                 if (userIndDb == null)
                 {
                     throw new Exception($"Пользователь с именем {user.Name} не найден в базе.");
@@ -67,7 +65,22 @@ namespace DocStore.Models.Manage
         }
 
         /// <summary>
-        /// Вычисление хша пароля, который ввел пользователь
+        /// Поиск пользователя в БД
+        /// </summary>
+        /// <param name="user">Искомый пользователь</param>
+        /// <param name="session">SQL-сессия</param>
+        /// <returns>Найденный пользователь</returns>
+        private static User SearchUser(User user, ISession session)
+        {
+            var userCrit = session.CreateCriteria<User>();
+            Log.Info($"Выполняется поиск пользователя {user.Name} в базе.");
+            userCrit.Add(Restrictions.Eq("Name", user.Name));
+            var userIndDb = userCrit.UniqueResult<User>();
+            return userIndDb;
+        }
+
+        /// <summary>
+        /// Вычисление хэша пароля, который ввел пользователь
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
