@@ -28,11 +28,11 @@ namespace DocStore.Models.Manage
                 msg = "Ошибка подключения к базе данных";
                 return false;
             }
-            User userIndDb;
+            User userInDb;
             try
             {
-                userIndDb = SearchUser(user, session);
-                if (userIndDb == null)
+                userInDb = SearchUser(user, session);
+                if (userInDb == null)
                 {
                     throw new Exception($"Пользователь с именем {user.Name} не найден в базе.");
                 }
@@ -54,14 +54,97 @@ namespace DocStore.Models.Manage
             var computedHash = ComputeHash(user);
             Log.Debug($"Полученное значение хэша:{computedHash}");
 
-            if (computedHash.Equals(userIndDb.Password))
+            if (computedHash.Equals(userInDb.Password))
             {
-                if (userIndDb.Role != null)
-                    Log.Info($"Пользователь {userIndDb.Name} может работать с документами. Роль пользователя: {userIndDb.Role.Name}");
+                if (userInDb.Role != null)
+                    Log.Info($"Пользователь {userInDb.Name} может работать с документами. Роль пользователя: {userInDb.Role.Name}");
                 return true;
             }
             msg = "Неверный пароль.";
             return false;
+        }
+
+        public static bool AddUser(User user, out string msg)
+        {
+            msg = string.Empty;
+            var session = NHibertnateSession.OpenSession();
+            if (session == null)
+            {
+                msg = "Ошибка подключения к базе данных";
+                return false;
+            }
+            try
+            {
+                var userInDb = SearchUser(user, session);
+                if (userInDb != null)
+                {
+                    throw new Exception($"Пользователь с именем {user.Name} уже существует в базе.");
+                }
+                Log.Debug("Перед добавлением в базу необходимо расчитать хэш.");
+                var hash = ComputeHash(user);
+                user.Password = hash;
+                using (var tx = session.BeginTransaction())
+                {
+                    Log.Debug("Выполняется добавление записи о новом пользователе.");
+                    session.Save(user);
+                    tx.Commit();
+                }
+                Log.Debug("Добавление записи успешно завершено.");
+
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                msg = "Возникла ошибка при добавлении пользователя.";
+                return false;
+            }
+            finally
+            {
+                Log.Debug("Выполняется закрытие sql-сессии");
+                session.Close();
+                Log.Debug("Закрытие sql-сессии завершено");
+            }
+            return true;
+        }
+
+        public static bool DeleteUser(User user, out string msg)
+        {
+            msg = string.Empty;
+            var session = NHibertnateSession.OpenSession();
+            if (session == null)
+            {
+                msg = "Ошибка подключения к базе данных";
+                return false;
+            }
+            try
+            {
+                var userInDb = SearchUser(user, session);
+                if (userInDb == null)
+                {
+                    throw new Exception($"Пользователь с именем {user.Name} не найден в базе, удаление невозможно.");
+                }
+                using (var tx = session.BeginTransaction())
+                {
+                    Log.Debug("Выполняется удаление записи о пользователе.");
+                    session.Delete(user);
+                    tx.Commit();
+                }
+                Log.Debug("Удаление записи успешно завершено.");
+
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                msg = "Возникла ошибка при удалении пользователя.";
+                return false;
+            }
+            finally
+            {
+                Log.Debug("Выполняется закрытие sql-сессии");
+                session.Close();
+                Log.Debug("Закрытие sql-сессии завершено");
+            }
+            return true;
         }
 
         /// <summary>
