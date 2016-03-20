@@ -9,6 +9,7 @@ namespace DocStore.Controllers
 {
     public class UserController : Controller
     {
+        private static readonly NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger();
         // GET: User
         public ActionResult Login()
         {
@@ -25,49 +26,65 @@ namespace DocStore.Controllers
             catch (Exception e)
             {
                 ModelState.AddModelError("error", e.Message);
-                Console.WriteLine(e);
+                Log.Error(e);
                 return View();
             }
+            Log.Debug($"Пользователь {user.Name} пытается войти в приложение.");
             if (!ModelState.IsValid) return View();
             var session = NHibertnateSession.OpenSession();
             if (session == null)
             {
-                ModelState.AddModelError("error", "Ошибка подключения к базе данных");
+                var errorMessage = "Ошибка подключения к базе данных";
+                Log.Error(errorMessage);
+                ModelState.AddModelError("error", errorMessage);
                 return View();
             }
             User userIndDb;
             try
             {
                 var userCrit = session.CreateCriteria<User>();
+                Log.Info($"Выполняется поиск пользователя {user.Name} в базе.");
                 userCrit.Add(Restrictions.Eq("Name", user.Name));
                 userIndDb = userCrit.UniqueResult<User>();
                 if (userIndDb == null)
                 {
                     throw new Exception($"Пользователь с именем {user.Name} не найден в базе.");
                 }
+                Log.Info($"Пользователь {user.Name} найден в базе, необходимо выполнить првоерку пароля.");
             }
             catch (Exception e)
             {
                 ModelState.AddModelError("error", e.Message);
-                Console.WriteLine(e);
+                Log.Error(e);
                 return View();
             }
             finally
             {
+                Log.Debug("Выполняется закрытие sql-сессии");
                 session.Close();
+                Log.Debug("Закрытие sql-сессии заверншено");
             }
-            session.Close();
-            var computedHash = ComputeHash(user);
 
+            Log.Debug("Производится вычисление хэша введенного пароля");
+            var computedHash = ComputeHash(user);
+            Log.Debug($"Полученное значение хэша:{computedHash}");
 
             if (computedHash.Equals(userIndDb.Password))
             {
+                Log.Info($"Пользователь {user.Name} может работать с документами. Роль пользователя: {user.Role.Name}");
                 return View("Documents");
             }
-            ModelState.AddModelError("error", "Пользователь не найден.");
+            var message = "Неверный пароль.";
+            Log.Error(message);
+            ModelState.AddModelError("error", message);
             return View();
         }
 
+        /// <summary>
+        /// Вычисление хша пароля, который ввел пользователь
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         private string ComputeHash(User user)
         {
             byte[] hash;
