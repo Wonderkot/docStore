@@ -50,7 +50,7 @@ namespace DocStore.Controllers
                 {
                     throw new Exception($"Пользователь с именем {user.Name} не найден в базе.");
                 }
-                Log.Info($"Пользователь {user.Name} найден в базе, необходимо выполнить првоерку пароля.");
+                Log.Info($"Пользователь {user.Name} найден в базе, необходимо выполнить проверку пароля.");
             }
             catch (Exception e)
             {
@@ -71,7 +71,7 @@ namespace DocStore.Controllers
 
             if (computedHash.Equals(userIndDb.Password))
             {
-                Log.Info($"Пользователь {user.Name} может работать с документами. Роль пользователя: {user.Role.Name}");
+                Log.Info($"Пользователь {userIndDb.Name} может работать с документами. Роль пользователя: {userIndDb.Role.Name}");
                 return View("Documents");
             }
             var message = "Неверный пароль.";
