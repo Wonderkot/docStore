@@ -52,7 +52,11 @@ namespace DocStore.Controllers
                 Console.WriteLine(e);
                 return View();
             }
-
+            finally
+            {
+                session.Close();
+            }
+            session.Close();
             var computedHash = ComputeHash(user);
 
 
