@@ -7,11 +7,11 @@ namespace DocStore.Models
     /// </summary>
     public class User
     {
-        public int Id { get; set; }
+        public virtual int Id { get; set; }
         [Required( ErrorMessage = "Введите логин")]
-        public string Name { get; set; }
+        public virtual string Name { get; set; }
         [Required (ErrorMessage = "Введите пароль")]
-        public string Password { get; set; }
-        public Role Role { get; set; }
+        public virtual string Password { get; set; }
+        public virtual Role Role { get; set; }
     }
 }
