@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using DocStore.Models.Nhibernate;
 using NHibernate;
 using NHibernate.Criterion;
+using NHibernate.Linq;
 
 namespace DocStore.Models.Manage
 {
@@ -12,15 +15,21 @@ namespace DocStore.Models.Manage
     public class UserManager
     {
         private static readonly NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// Проверка существования пользователя
         /// </summary>
         /// <param name="user">Проверяемый пользователь</param>
-        /// <seealso cref="User"/>
         /// <param name="msg">Сообщение об ошибке</param>
+        /// <seealso cref="User"/>
         /// <returns></returns>
-        public static bool CheckUser(User user, out string msg)
+        public static bool CheckUser(ref User user, out string msg)
         {
+            if (user == null)
+            {
+                msg = "Нет данных о пользователе.";
+                return false;
+            };
             msg = string.Empty;
             var session = NHibertnateSession.OpenSession();
             if (session == null)
@@ -58,6 +67,7 @@ namespace DocStore.Models.Manage
             {
                 if (userInDb.Role != null)
                     Log.Info($"Пользователь {userInDb.Name} может работать с документами. Роль пользователя: {userInDb.Role.Name}");
+                user = userInDb;
                 return true;
             }
             msg = "Неверный пароль.";
@@ -146,6 +156,28 @@ namespace DocStore.Models.Manage
             }
             return true;
         }
+
+        public static List<Role> GetRoles(out String msg)
+        {
+            msg = null;
+            var session = NHibertnateSession.OpenSession();
+            if (session == null)
+            {
+                msg = "Ошибка подключения к базе данных";
+                return null;
+            }
+            List<Role> roleList = null;
+            try
+            {
+                roleList = session.Query<Role>().ToList();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                msg = "Ошибка при получении списка ролей";
+            }
+            return roleList;
+        } 
 
         /// <summary>
         /// Поиск пользователя в БД
